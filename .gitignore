@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+node_modules/
+dist/
+.DS_Store
+coverage/
+.claude/
+.env.local
+.env.render
