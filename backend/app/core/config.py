@@ -22,8 +22,13 @@ class Settings(BaseSettings):
     # How far ahead a customer may book.
     horizonte_dias: int = 30
 
-    # Gemini (free tier)
+    # Gemini (free tier). Text models are tried in order when one is overloaded.
     gemini_api_key: str = ""
+    gemini_modelos_texto: list[str] = ["gemini-3.7-flash", "gemini-flash-latest"]
+    # Reference paid-tier prices (USD per million tokens) used only to show what a
+    # conversation would cost; the demo itself runs on the free tier.
+    preco_entrada_usd_mtok: float = 0.30
+    preco_saida_usd_mtok: float = 2.50
 
     @property
     def tz(self) -> ZoneInfo:
