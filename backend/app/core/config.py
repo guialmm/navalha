@@ -30,6 +30,15 @@ class Settings(BaseSettings):
     preco_entrada_usd_mtok: float = 0.30
     preco_saida_usd_mtok: float = 2.50
 
+    # Voice: Gemini Live (native audio) through LiveKit
+    gemini_modelo_voz: str = "gemini-3.1-flash-live-preview"
+    gemini_voz: str = "Kore"
+    preco_voz_entrada_usd_mtok: float = 3.00
+    preco_voz_saida_usd_mtok: float = 12.00
+    livekit_url: str = ""
+    livekit_api_key: str = ""
+    livekit_api_secret: str = ""
+
     @property
     def tz(self) -> ZoneInfo:
         return ZoneInfo(self.fuso)
