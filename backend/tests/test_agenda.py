@@ -208,3 +208,10 @@ def test_phone_normalization(bruto, limpo):
 def test_phone_without_area_code_is_refused():
     with pytest.raises(ErroAgenda, match="DDD"):
         normalizar_telefone("98888-7777")
+
+
+def test_mobile_missing_a_digit_is_refused():
+    # Heard in a simulated call: "nove nove oito sete seis, cinco quatro três dois" → 99875432.
+    with pytest.raises(ErroAgenda, match="faltou um número"):
+        normalizar_telefone("11 9987-5432")
+    assert normalizar_telefone("11 3333-4444") == "1133334444"  # landlines still have 10

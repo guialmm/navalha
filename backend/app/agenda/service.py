@@ -49,6 +49,12 @@ def normalizar_telefone(telefone: str) -> str:
         digitos = digitos[2:]
     if len(digitos) not in (10, 11):
         raise ErroAgenda("Não entendi o telefone. Pode repetir com o DDD?")
+    # Brazilian mobiles have 11 digits and start with 9 after the area code; a
+    # 10-digit number starting with 9 does not exist. Speech recognition drops
+    # digits ("nove nove oito sete seis" heard as "99875"), so refuse it here
+    # instead of booking a number nobody answers.
+    if len(digitos) == 10 and digitos[2] in "6789":
+        raise ErroAgenda("Parece que faltou um número no celular. Pode repetir o telefone com o DDD?")
     return digitos
 
 
