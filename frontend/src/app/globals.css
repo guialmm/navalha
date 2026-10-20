@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  /* Same paper & ink as the rest of the Guialm Software portfolio. */
+  --color-bg: #f5f1ea;
+  --color-bg-elev: #fffdf9;
+  --color-ink: #1d1712;
+  --color-accent: #a4471f;
+  --color-accent-soft: rgba(164, 71, 31, 0.1);
+  --color-border: rgba(29, 23, 18, 0.1);
+  --color-border-strong: rgba(29, 23, 18, 0.22);
+  --color-surface: rgba(29, 23, 18, 0.03);
+  --color-text: #1d1712;
+  --color-text-dim: #5c5249;
+  --color-text-muted: #8c8177;
+  --color-ok: #3f7d4f;
+  --color-danger: #b3261e;
+
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+/* The receptionist's orb. Volume drives --nivel (0..1) from JavaScript. */
+@keyframes respirar {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+@keyframes onda {
+  from { transform: scale(1); opacity: 0.35; }
+  to { transform: scale(1.6); opacity: 0; }
+}
+@keyframes surgir {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-surgir { animation: surgir 0.25s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
