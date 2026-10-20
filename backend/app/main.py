@@ -120,7 +120,8 @@ async def conversas(limite: int = 20, session: AsyncSession = Depends(get_sessio
         await session.execute(
             select(Conversa, func.coalesce(mensagens.c.n, 0), Conversa.id.in_(agendou))
             .outerjoin(mensagens, mensagens.c.conversa_id == Conversa.id)
-            .where(Conversa.canal != Canal.eval)
+            # Calls where nobody spoke (mic denied, closed tab) are noise on the dashboard.
+            .where(Conversa.canal != Canal.eval, mensagens.c.n > 0)
             .order_by(Conversa.iniciada_em.desc())
             .limit(min(limite, 100))
         )

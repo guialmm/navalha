@@ -68,7 +68,8 @@ async def test_dashboard_hides_eval_conversations_and_masks_transcripts(http):
     async with SessionLocal() as s:
         voz = Conversa(canal=Canal.voz, iniciada_em=agora, duracao_s=60)
         teste = Conversa(canal=Canal.eval, iniciada_em=agora)
-        s.add_all([voz, teste])
+        muda = Conversa(canal=Canal.voz, iniciada_em=agora)  # mic denied: nobody spoke
+        s.add_all([voz, teste, muda])
         await s.flush()
         s.add(Mensagem(conversa_id=voz.id, papel=Papel.cliente, conteudo="é 11 98765-4321"))
         await s.commit()
