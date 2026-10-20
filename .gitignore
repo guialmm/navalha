@@ -11,3 +11,4 @@ coverage/
 .env.local
 .env.render
 .cache_tts/
+backend/evals/resultados/
