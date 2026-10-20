@@ -28,6 +28,17 @@ export function Recepcao() {
   const [chamando, setChamando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
+  // Hanging up while the receptionist is mid-sentence cuts her transcript stream,
+  // and livekit-client rejects that stream with nobody left to catch it. Expected,
+  // harmless, and not worth a red error in the console.
+  useEffect(() => {
+    function ignorarFimDeStream(evento: PromiseRejectionEvent) {
+      if (evento.reason?.name === "DataStreamError") evento.preventDefault();
+    }
+    window.addEventListener("unhandledrejection", ignorarFimDeStream);
+    return () => window.removeEventListener("unhandledrejection", ignorarFimDeStream);
+  }, []);
+
   async function ligar() {
     setErro(null);
     setChamando(true);
