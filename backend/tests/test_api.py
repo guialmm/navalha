@@ -18,6 +18,7 @@ async def http(monkeypatch):
     monkeypatch.setattr(settings, "livekit_api_secret", "segredo-de-teste-com-32-caracteres!!")
     monkeypatch.setattr(settings, "livekit_url", "wss://teste.livekit.cloud")
     main._ligacoes.clear()
+    main._hoje.clear()
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://teste") as c:
         yield c
 
@@ -79,3 +80,18 @@ async def test_dashboard_hides_eval_conversations_and_masks_transcripts(http):
     detalhe = (await http.get(f"/api/conversas/{voz.id}")).json()
     assert detalhe["mensagens"][0]["texto"] == "é (11) 9••••-4321"
     assert (await http.get(f"/api/conversas/{teste.id}")).status_code == 404
+
+
+async def test_daily_cap_protects_the_free_voice_minutes(http, monkeypatch):
+    monkeypatch.setattr(settings, "ligacoes_por_dia", 2)
+    for ip in ("1.1.1.1", "2.2.2.2"):
+        assert (await http.post("/api/ligacao", headers={"x-forwarded-for": ip})).status_code == 200
+    r = await http.post("/api/ligacao", headers={"x-forwarded-for": "3.3.3.3"})
+    assert r.status_code == 429 and "Volte amanhã" in r.json()["detail"]
+
+
+async def test_rate_limit_uses_the_visitor_ip_behind_the_proxy(http):
+    for _ in range(main.LIGACOES_POR_IP):
+        await http.post("/api/ligacao", headers={"x-forwarded-for": "9.9.9.9, 76.76.21.21"})
+    assert (await http.post("/api/ligacao", headers={"x-forwarded-for": "9.9.9.9"})).status_code == 429
+    assert (await http.post("/api/ligacao", headers={"x-forwarded-for": "8.8.8.8"})).status_code == 200

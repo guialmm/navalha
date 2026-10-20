@@ -23,7 +23,7 @@ from app.voz.registro import RegistroVoz
 
 log = logging.getLogger("navalha.voz")
 log.setLevel(logging.INFO)
-NOME_AGENTE = "recepcionista"
+NOME_AGENTE = settings.nome_agente
 
 
 

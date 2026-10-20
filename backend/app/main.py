@@ -20,13 +20,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.db import get_session
 from app.models import Agendamento, Canal, Conversa, Mensagem, Papel, Servico, StatusAgendamento
-from app.voz.agente import NOME_AGENTE
 
 app = FastAPI(title="Navalha", docs_url="/api/docs", openapi_url="/api/openapi.json")
 
 LIGACOES_POR_IP = 5  # per window; each call spends shared free-tier quota
 JANELA_S = 10 * 60
 _ligacoes: dict[str, deque[float]] = defaultdict(deque)
+# LiveKit's free plan has 1,000 agent minutes a month: ~30 short calls a day.
+_hoje: dict[date, int] = {}
 
 TELEFONE = re.compile(r"(?<!\d)\(?(\d{2})\)?[\s.-]{0,2}(\d{4,5})[\s.-]?(\d{4})(?!\d)")
 
@@ -49,7 +50,12 @@ class Ligacao(BaseModel):
 
 @app.post("/api/ligacao", response_model=Ligacao)
 async def ligar(request: Request) -> Ligacao:
-    ip = request.client.host if request.client else "?"
+    hoje = datetime.now(settings.tz).date()
+    if _hoje.get(hoje, 0) >= settings.ligacoes_por_dia:
+        raise HTTPException(429, "A recepção da demo atingiu o limite de ligações de hoje. Volte amanhã!")
+    # Behind Vercel's rewrite the socket peer is Vercel; the visitor is the first hop.
+    encaminhado = request.headers.get("x-forwarded-for", "")
+    ip = encaminhado.split(",")[0].strip() or (request.client.host if request.client else "?")
     agora = time.monotonic()
     fila = _ligacoes[ip]
     while fila and agora - fila[0] > JANELA_S:
@@ -57,6 +63,9 @@ async def ligar(request: Request) -> Ligacao:
     if len(fila) >= LIGACOES_POR_IP:
         raise HTTPException(429, "Muitas ligações seguidas. Tente de novo em alguns minutos.")
     fila.append(agora)
+    if hoje not in _hoje:
+        _hoje.clear()  # a new day: yesterday's count goes away
+    _hoje[hoje] = _hoje.get(hoje, 0) + 1
 
     sala = f"ligacao-{uuid.uuid4().hex[:10]}"
     token = (
@@ -66,7 +75,7 @@ async def ligar(request: Request) -> Ligacao:
         .with_ttl(timedelta(minutes=15))
         .with_grants(api.VideoGrants(room_join=True, room=sala, can_publish=True, can_subscribe=True))
         # Joining the room is what calls the receptionist in.
-        .with_room_config(api.RoomConfiguration(agents=[api.RoomAgentDispatch(agent_name=NOME_AGENTE)]))
+        .with_room_config(api.RoomConfiguration(agents=[api.RoomAgentDispatch(agent_name=settings.nome_agente)]))
         .to_jwt()
     )
     return Ligacao(url=settings.livekit_url, token=token, sala=sala)

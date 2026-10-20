@@ -22,7 +22,6 @@ from google.genai import errors, types
 from livekit import api, rtc
 
 from app.core.config import settings
-from app.voz.agente import NOME_AGENTE
 
 TAXA = 24000  # Gemini TTS outputs 24 kHz mono 16-bit PCM
 SILENCIO_FIM_S = 1.6  # agent quiet this long = its turn is over
@@ -105,7 +104,7 @@ async def main(falas: list[str]) -> None:
         api.AccessToken(settings.livekit_api_key, settings.livekit_api_secret)
         .with_identity("cliente-simulado")
         .with_grants(api.VideoGrants(room_join=True, room=sala))
-        .with_room_config(api.RoomConfiguration(agents=[api.RoomAgentDispatch(agent_name=NOME_AGENTE)]))
+        .with_room_config(api.RoomConfiguration(agents=[api.RoomAgentDispatch(agent_name=settings.nome_agente)]))
         .to_jwt()
     )
     room = rtc.Room()

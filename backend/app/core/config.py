@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     gemini_voz: str = "Kore"
     preco_voz_entrada_usd_mtok: float = 3.00
     preco_voz_saida_usd_mtok: float = 12.00
+    # The worker registers under this name; the API dispatches calls to it.
+    nome_agente: str = "recepcionista"
+    ligacoes_por_dia: int = 30
     livekit_url: str = ""
     livekit_api_key: str = ""
     livekit_api_secret: str = ""

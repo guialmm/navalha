@@ -1,0 +1,5 @@
+# Voice worker (LiveKit Agents + Gemini Live + Silero VAD), on top of the API deps
+-r requirements.txt
+livekit-agents==1.8.6
+livekit-plugins-google==1.8.6
+livekit-plugins-silero==1.8.6
