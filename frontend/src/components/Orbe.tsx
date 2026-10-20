@@ -13,13 +13,13 @@ type Props = {
   tamanho?: number;
 };
 
-// Metallic pigments that drift inside the sphere: brass, amber and copper.
+// Chrome, like the razor: cool silvers and graphite drifting inside the sphere.
 const MANCHAS = [
-  { cor: "255, 228, 168", raio: 0.6, vel: 0.13, fase: 0.0, orbita: 0.34 }, // pale gold
-  { cor: "233, 184, 104", raio: 0.66, vel: 0.17, fase: 2.1, orbita: 0.36 }, // brass
-  { cor: "185, 119, 46", raio: 0.62, vel: 0.11, fase: 4.0, orbita: 0.42 }, // amber
-  { cor: "255, 244, 220", raio: 0.38, vel: 0.21, fase: 3.3, orbita: 0.3 }, // highlight
-  { cor: "122, 62, 28", raio: 0.55, vel: 0.15, fase: 1.2, orbita: 0.44 }, // copper
+  { cor: "248, 250, 252", raio: 0.6, vel: 0.13, fase: 0.0, orbita: 0.34 }, // mirror white
+  { cor: "186, 192, 202", raio: 0.66, vel: 0.17, fase: 2.1, orbita: 0.36 }, // silver
+  { cor: "118, 124, 136", raio: 0.62, vel: 0.11, fase: 4.0, orbita: 0.42 }, // steel
+  { cor: "226, 230, 236", raio: 0.38, vel: 0.21, fase: 3.3, orbita: 0.3 }, // highlight
+  { cor: "40, 44, 52", raio: 0.55, vel: 0.15, fase: 1.2, orbita: 0.44 }, // graphite
 ];
 
 // How lively each state is: drift speed and how much the voice level moves things.
@@ -93,8 +93,8 @@ export function Orbe({ estado, nivel, nivelCliente, tamanho: maximo = 340 }: Pro
       // Soft halo behind the sphere
       // Ends inside the canvas so it never shows a square edge.
       const halo = ctx!.createRadialGradient(c, c, r * 0.8, c, c, tamanho / 2);
-      halo.addColorStop(0, `rgba(201, 164, 106, ${0.16 + agente * 0.3})`);
-      halo.addColorStop(1, "rgba(201, 164, 106, 0)");
+      halo.addColorStop(0, `rgba(210, 216, 226, ${0.14 + agente * 0.28})`);
+      halo.addColorStop(1, "rgba(210, 216, 226, 0)");
       ctx!.fillStyle = halo;
       ctx!.beginPath();
       ctx!.arc(c, c, tamanho / 2, 0, Math.PI * 2);
@@ -113,7 +113,7 @@ export function Orbe({ estado, nivel, nivelCliente, tamanho: maximo = 340 }: Pro
           if (i === 0) ctx!.moveTo(x, y);
           else ctx!.lineTo(x, y);
         }
-        ctx!.strokeStyle = `rgba(233, 196, 130, ${0.18 + cliente * 0.4})`;
+        ctx!.strokeStyle = `rgba(220, 226, 236, ${0.18 + cliente * 0.4})`;
         ctx!.lineWidth = 2;
         ctx!.stroke();
       }
@@ -123,7 +123,7 @@ export function Orbe({ estado, nivel, nivelCliente, tamanho: maximo = 340 }: Pro
       ctx!.beginPath();
       ctx!.arc(c, c, r, 0, Math.PI * 2);
       ctx!.clip();
-      ctx!.fillStyle = "#6e4318";
+      ctx!.fillStyle = "#3c4048";
       ctx!.fillRect(0, 0, tamanho, tamanho);
       ctx!.filter = `blur(${tamanho * 0.07}px) saturate(${ritmo.saturacao})`;
       for (const m of MANCHAS) {
