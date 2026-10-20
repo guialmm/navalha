@@ -1,0 +1,22 @@
+# Render Blueprint for the HTTP API (the voice worker lives on LiveKit Cloud,
+# the site on Vercel). Values marked sync:false are filled in on the dashboard.
+services:
+  - type: web
+    name: navalha-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile.api
+    healthCheckPath: /api/servicos
+    envVars:
+      - key: ENV
+        value: prod
+      - key: DATABASE_URL
+        sync: false
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
