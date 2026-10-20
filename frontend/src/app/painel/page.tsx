@@ -23,6 +23,13 @@ type ResumoConversa = {
   agendou: boolean;
 };
 
+type Resumo = {
+  ligacoes: number;
+  agendamentos_pela_ia: number;
+  latencia_media_ms: number | null;
+  custo_medio_usd: number | null;
+};
+
 type Mensagem = {
   papel: "cliente" | "agente" | "ferramenta";
   texto: string;
@@ -42,16 +49,27 @@ function duracao(s: number | null, inicio: string) {
   return s < 60 ? `${s}s` : `${Math.floor(s / 60)}min ${s % 60}s`;
 }
 
-const segundos = (ms: number | null) => (ms == null ? "—" : `${(ms / 1000).toFixed(1)}s`);
+const decimal = (n: number, casas: number) =>
+  n.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
+const segundos = (ms: number | null) => (ms == null ? "—" : `${decimal(ms / 1000, 1)} s`);
+const dolares = (v: number) => `US$ ${decimal(v, 3)}`;
 
 export default function Painel() {
   const [agenda, setAgenda] = useState<Agendamento[] | null>(null);
   const [conversas, setConversas] = useState<ResumoConversa[] | null>(null);
   const [aberta, setAberta] = useState<Conversa | null>(null);
+  const [resumo, setResumo] = useState<Resumo | null>(null);
 
+  // Polls so a call made in another tab shows up while you watch.
   useEffect(() => {
-    fetch("/api/agenda?dias=7").then((r) => r.json()).then(setAgenda).catch(() => setAgenda([]));
-    fetch("/api/conversas?limite=10").then((r) => r.json()).then(setConversas).catch(() => setConversas([]));
+    function carregar() {
+      fetch("/api/agenda?dias=7").then((r) => r.json()).then(setAgenda).catch(() => setAgenda([]));
+      fetch("/api/conversas?limite=10").then((r) => r.json()).then(setConversas).catch(() => setConversas([]));
+      fetch("/api/resumo").then((r) => r.json()).then(setResumo).catch(() => {});
+    }
+    carregar();
+    const id = setInterval(carregar, 15_000);
+    return () => clearInterval(id);
   }, []);
 
   async function abrir(id: string) {
@@ -66,10 +84,32 @@ export default function Painel() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-      <h1 className="text-3xl font-extrabold tracking-tight">Painel da barbearia</h1>
-      <p className="mt-1 text-text-dim">O que a recepcionista marcou e como foram as ligações.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">Barbearia Navalha</p>
+          <h1 className="mt-2 text-4xl font-semibold tracking-[-0.035em]">Painel</h1>
+        </div>
+        <p className="inline-flex items-center gap-2 text-xs text-text-muted">
+          <span className="size-1.5 animate-pulse rounded-full bg-ok" /> atualiza sozinho a cada 15 s
+        </p>
+      </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-2">
+      <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border lg:grid-cols-4">
+        {[
+          ["Ligações atendidas", resumo ? String(resumo.ligacoes) : "—"],
+          ["Agendamentos pela IA", resumo ? String(resumo.agendamentos_pela_ia) : "—"],
+          ["Tempo de resposta médio", resumo ? segundos(resumo.latencia_media_ms) : "—"],
+          ["Custo médio por ligação*", resumo?.custo_medio_usd != null ? dolares(resumo.custo_medio_usd) : "—"],
+        ].map(([rotulo, valor]) => (
+          <div key={rotulo} className="bg-bg-elev px-5 py-4">
+            <dt className="text-xs text-text-muted">{rotulo}</dt>
+            <dd className="mt-1 text-3xl font-semibold tracking-tight tabular-nums">{valor}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-2 text-[11px] text-text-muted">* no plano pago do Gemini; a demo roda no gratuito.</p>
+
+      <div className="mt-10 grid gap-10 lg:grid-cols-2">
         <section>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Agenda dos próximos 7 dias</h2>
           {agenda === null && <p className="mt-4 text-text-muted">Carregando…</p>}
@@ -120,7 +160,7 @@ export default function Painel() {
                     <span>{duracao(c.duracao_s, c.iniciada_em)}</span>
                     <span>{c.falas} {c.falas === 1 ? "fala" : "falas"}</span>
                     <span>resposta média {segundos(c.latencia_media_ms)}</span>
-                    <span>US$ {c.custo_usd.toFixed(3)}</span>
+                    <span>{dolares(c.custo_usd)}</span>
                     {c.agendou && <span className="font-medium text-ok">agendou</span>}
                   </span>
                 </button>
@@ -133,7 +173,7 @@ export default function Painel() {
               <div className="flex items-baseline justify-between">
                 <h3 className="font-semibold">Transcrição</h3>
                 <span className="text-xs text-text-muted">
-                  {aberta.tokens.toLocaleString("pt-BR")} tokens · custo no plano pago US$ {aberta.custo_usd.toFixed(3)}
+                  {aberta.tokens.toLocaleString("pt-BR")} tokens · custo no plano pago {dolares(aberta.custo_usd)}
                 </span>
               </div>
               <ol className="mt-4 space-y-2.5">

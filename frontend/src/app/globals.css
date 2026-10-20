@@ -1,22 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-  /* Same paper & ink as the rest of the Guialm Software portfolio. */
-  --color-bg: #f5f1ea;
-  --color-bg-elev: #fffdf9;
-  --color-ink: #1d1712;
-  --color-accent: #a4471f;
-  --color-accent-soft: rgba(164, 71, 31, 0.1);
-  --color-border: rgba(29, 23, 18, 0.1);
-  --color-border-strong: rgba(29, 23, 18, 0.22);
-  --color-surface: rgba(29, 23, 18, 0.03);
-  --color-text: #1d1712;
-  --color-text-dim: #5c5249;
-  --color-text-muted: #8c8177;
-  --color-ok: #3f7d4f;
-  --color-danger: #b3261e;
+  /* Barbershop at night: graphite, ivory type, brass details. */
+  --color-bg: #0e0e0f;
+  --color-bg-elev: #17171a;
+  --color-ink: #f2ede4; /* primary surfaces on dark: ivory buttons and bubbles */
+  --color-accent: #c9a46a; /* brass */
+  --color-accent-soft: rgba(201, 164, 106, 0.12);
+  --color-border: rgba(242, 237, 228, 0.08);
+  --color-border-strong: rgba(242, 237, 228, 0.18);
+  --color-surface: rgba(242, 237, 228, 0.05);
+  --color-text: #f2ede4;
+  --color-text-dim: #b8b2a7;
+  --color-text-muted: #858078;
+  --color-ok: #7fb08a;
+  --color-danger: #e5534b;
 
   --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
 }
 
 body {
@@ -43,8 +47,8 @@ body {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(60rem 30rem at 50% 38%, rgba(233, 138, 91, 0.16), transparent 70%),
-    radial-gradient(40rem 20rem at 50% 100%, rgba(29, 23, 18, 0.05), transparent 70%);
+    radial-gradient(50rem 28rem at 50% 36%, rgba(201, 164, 106, 0.1), transparent 70%),
+    radial-gradient(60rem 24rem at 50% 110%, rgba(201, 164, 106, 0.05), transparent 70%);
 }
 
 body::after {
@@ -53,7 +57,8 @@ body::after {
   inset: 0;
   pointer-events: none;
   z-index: 50;
-  opacity: 0.035;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 

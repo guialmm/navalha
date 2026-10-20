@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type EstadoOrbe = "parado" | "conectando" | "ouvindo" | "pensando" | "falando";
 
@@ -13,22 +13,22 @@ type Props = {
   tamanho?: number;
 };
 
-// Warm pigments that drift inside the sphere. Kept to the brand's terracotta family.
+// Metallic pigments that drift inside the sphere: brass, amber and copper.
 const MANCHAS = [
-  { cor: "255, 196, 140", raio: 0.62, vel: 0.13, fase: 0.0, orbita: 0.34 }, // apricot
-  { cor: "238, 112, 52", raio: 0.66, vel: 0.17, fase: 2.1, orbita: 0.36 }, // bright terracotta
-  { cor: "164, 52, 22", raio: 0.58, vel: 0.11, fase: 4.0, orbita: 0.42 }, // deep rust
-  { cor: "255, 226, 170", raio: 0.42, vel: 0.21, fase: 3.3, orbita: 0.3 }, // warm gold
-  { cor: "214, 74, 58", raio: 0.5, vel: 0.15, fase: 1.2, orbita: 0.4 }, // red clay
+  { cor: "255, 228, 168", raio: 0.6, vel: 0.13, fase: 0.0, orbita: 0.34 }, // pale gold
+  { cor: "233, 184, 104", raio: 0.66, vel: 0.17, fase: 2.1, orbita: 0.36 }, // brass
+  { cor: "185, 119, 46", raio: 0.62, vel: 0.11, fase: 4.0, orbita: 0.42 }, // amber
+  { cor: "255, 244, 220", raio: 0.38, vel: 0.21, fase: 3.3, orbita: 0.3 }, // highlight
+  { cor: "122, 62, 28", raio: 0.55, vel: 0.15, fase: 1.2, orbita: 0.44 }, // copper
 ];
 
 // How lively each state is: drift speed and how much the voice level moves things.
 const RITMO: Record<EstadoOrbe, { velocidade: number; saturacao: number }> = {
-  parado: { velocidade: 0.35, saturacao: 1 },
-  conectando: { velocidade: 0.9, saturacao: 0.55 },
-  ouvindo: { velocidade: 0.5, saturacao: 1 },
-  pensando: { velocidade: 1.8, saturacao: 0.9 },
-  falando: { velocidade: 1.1, saturacao: 1.1 },
+  parado: { velocidade: 0.35, saturacao: 1.2 },
+  conectando: { velocidade: 0.9, saturacao: 0.7 },
+  ouvindo: { velocidade: 0.5, saturacao: 1.2 },
+  pensando: { velocidade: 1.8, saturacao: 1.1 },
+  falando: { velocidade: 1.1, saturacao: 1.35 },
 };
 
 /**
@@ -37,8 +37,16 @@ const RITMO: Record<EstadoOrbe, { velocidade: number; saturacao: number }> = {
  * Values arrive as props but are read from refs inside one rAF loop, so the
  * animation never waits for React.
  */
-export function Orbe({ estado, nivel, nivelCliente, tamanho = 340 }: Props) {
+export function Orbe({ estado, nivel, nivelCliente, tamanho: maximo = 340 }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  // Fits narrow phones: never wider than the screen minus the page gutters.
+  const [tamanho, setTamanho] = useState(maximo);
+  useEffect(() => {
+    const ajustar = () => setTamanho(Math.min(maximo, window.innerWidth - 48));
+    ajustar();
+    window.addEventListener("resize", ajustar);
+    return () => window.removeEventListener("resize", ajustar);
+  }, [maximo]);
   const alvo = useRef({ estado, nivel, nivelCliente });
 
   useEffect(() => {
@@ -85,8 +93,8 @@ export function Orbe({ estado, nivel, nivelCliente, tamanho = 340 }: Props) {
       // Soft halo behind the sphere
       // Ends inside the canvas so it never shows a square edge.
       const halo = ctx!.createRadialGradient(c, c, r * 0.8, c, c, tamanho / 2);
-      halo.addColorStop(0, `rgba(238, 112, 52, ${0.22 + agente * 0.3})`);
-      halo.addColorStop(1, "rgba(238, 112, 52, 0)");
+      halo.addColorStop(0, `rgba(201, 164, 106, ${0.16 + agente * 0.3})`);
+      halo.addColorStop(1, "rgba(201, 164, 106, 0)");
       ctx!.fillStyle = halo;
       ctx!.beginPath();
       ctx!.arc(c, c, tamanho / 2, 0, Math.PI * 2);
@@ -105,7 +113,7 @@ export function Orbe({ estado, nivel, nivelCliente, tamanho = 340 }: Props) {
           if (i === 0) ctx!.moveTo(x, y);
           else ctx!.lineTo(x, y);
         }
-        ctx!.strokeStyle = `rgba(164, 71, 31, ${0.15 + cliente * 0.35})`;
+        ctx!.strokeStyle = `rgba(233, 196, 130, ${0.18 + cliente * 0.4})`;
         ctx!.lineWidth = 2;
         ctx!.stroke();
       }
@@ -115,7 +123,7 @@ export function Orbe({ estado, nivel, nivelCliente, tamanho = 340 }: Props) {
       ctx!.beginPath();
       ctx!.arc(c, c, r, 0, Math.PI * 2);
       ctx!.clip();
-      ctx!.fillStyle = "#c4502a";
+      ctx!.fillStyle = "#6e4318";
       ctx!.fillRect(0, 0, tamanho, tamanho);
       ctx!.filter = `blur(${tamanho * 0.07}px) saturate(${ritmo.saturacao})`;
       for (const m of MANCHAS) {
@@ -133,10 +141,12 @@ export function Orbe({ estado, nivel, nivelCliente, tamanho = 340 }: Props) {
       }
       ctx!.filter = "none";
       // Glassy light from the top-left and shade at the bottom
-      const luz = ctx!.createRadialGradient(c - r * 0.35, c - r * 0.45, 0, c, c, r * 1.05);
-      luz.addColorStop(0, "rgba(255, 250, 244, 0.5)");
-      luz.addColorStop(0.4, "rgba(255, 250, 244, 0)");
-      luz.addColorStop(1, "rgba(60, 18, 6, 0.18)");
+      // Polished metal: a tight highlight up top, a deep falloff toward the rim.
+      const luz = ctx!.createRadialGradient(c - r * 0.3, c - r * 0.42, 0, c, c, r * 1.02);
+      luz.addColorStop(0, "rgba(255, 252, 240, 0.7)");
+      luz.addColorStop(0.22, "rgba(255, 248, 230, 0.12)");
+      luz.addColorStop(0.62, "rgba(0, 0, 0, 0)");
+      luz.addColorStop(1, "rgba(8, 4, 1, 0.62)");
       ctx!.fillStyle = luz;
       ctx!.fillRect(0, 0, tamanho, tamanho);
       ctx!.restore();

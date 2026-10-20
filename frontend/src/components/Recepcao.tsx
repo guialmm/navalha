@@ -129,7 +129,7 @@ function Espera({ chamando, ligar }: { chamando: boolean; ligar: () => void }) {
       <button
         onClick={ligar}
         disabled={chamando}
-        className="group mt-8 inline-flex items-center gap-3 rounded-full bg-ink py-3 pl-3 pr-6 font-medium text-bg shadow-[0_10px_30px_-12px_rgba(29,23,18,0.6)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_-14px_rgba(29,23,18,0.7)] active:translate-y-0 disabled:opacity-70"
+        className="group mt-8 inline-flex items-center gap-3 rounded-full bg-ink py-3 pl-3 pr-6 font-medium text-bg shadow-[0_10px_40px_-12px_rgba(201,164,106,0.45)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_48px_-14px_rgba(201,164,106,0.6)] active:translate-y-0 disabled:opacity-70"
       >
         <span className="grid size-9 place-items-center rounded-full bg-accent transition group-hover:scale-105">
           <IconeTelefone />
@@ -178,7 +178,7 @@ function Chamada() {
       <Status estado={estado} />
       <Legendas transcricoes={transcricoes} meuId={meuId} />
 
-      <div className="mt-6 flex items-center gap-2 rounded-full border border-border bg-bg-elev/80 p-2 shadow-[0_10px_30px_-18px_rgba(29,23,18,0.5)] backdrop-blur">
+      <div className="mt-6 flex items-center gap-2 rounded-full border border-border bg-bg-elev/80 p-2 shadow-[0_20px_40px_-20px_rgba(0,0,0,0.8)] backdrop-blur">
         <BotaoRedondo
           rotulo={isMicrophoneEnabled ? "Silenciar microfone" : "Ativar microfone"}
           ativo={!isMicrophoneEnabled}

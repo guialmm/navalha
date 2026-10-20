@@ -98,3 +98,18 @@ async def test_rate_limit_uses_the_visitor_ip_behind_the_proxy(http):
         await http.post("/api/ligacao", headers={"x-forwarded-for": "9.9.9.9, 76.76.21.21"})
     assert (await http.post("/api/ligacao", headers={"x-forwarded-for": "9.9.9.9"})).status_code == 429
     assert (await http.post("/api/ligacao", headers={"x-forwarded-for": "8.8.8.8"})).status_code == 200
+
+
+async def test_summary_counts_only_real_calls(http):
+    agora = datetime.now(settings.tz)
+    async with SessionLocal() as s:
+        boas = [Conversa(canal=Canal.voz, iniciada_em=agora, latencia_media_ms=ms, custo_usd=c) for ms, c in ((1000, 0.1), (2000, 0.3))]
+        muda = Conversa(canal=Canal.voz, iniciada_em=agora, latencia_media_ms=9000, custo_usd=5)
+        teste = Conversa(canal=Canal.eval, iniciada_em=agora, latencia_media_ms=9000)
+        s.add_all([*boas, muda, teste])
+        await s.flush()
+        for c in (*boas, teste):
+            s.add(Mensagem(conversa_id=c.id, papel=Papel.cliente, conteudo="oi"))
+        await s.commit()
+    r = (await http.get("/api/resumo")).json()
+    assert r == {"ligacoes": 2, "agendamentos_pela_ia": 0, "latencia_media_ms": 1500, "custo_medio_usd": 0.2}

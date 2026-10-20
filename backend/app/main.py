@@ -156,6 +156,29 @@ async def conversas(limite: int = 20, session: AsyncSession = Depends(get_sessio
     ]
 
 
+@app.get("/api/resumo")
+async def resumo(session: AsyncSession = Depends(get_session)) -> dict:
+    """Headline numbers for the dashboard, over every real call."""
+    com_cliente = (
+        select(Mensagem.conversa_id).where(Mensagem.papel == Papel.cliente).distinct().scalar_subquery()
+    )
+    reais = select(Conversa).where(Conversa.canal != Canal.eval, Conversa.id.in_(com_cliente)).subquery()
+    ligacoes, latencia, custo = (
+        await session.execute(
+            select(func.count(), func.avg(reais.c.latencia_media_ms), func.avg(reais.c.custo_usd))
+        )
+    ).one()
+    agendados = await session.scalar(
+        select(func.count()).select_from(Agendamento).where(Agendamento.conversa_id.in_(select(reais.c.id)))
+    )
+    return {
+        "ligacoes": ligacoes,
+        "agendamentos_pela_ia": agendados,
+        "latencia_media_ms": round(latencia) if latencia is not None else None,
+        "custo_medio_usd": round(float(custo), 4) if custo is not None else None,
+    }
+
+
 @app.get("/api/conversas/{conversa_id}")
 async def conversa(conversa_id: uuid.UUID, session: AsyncSession = Depends(get_session)) -> dict:
     c = await session.get(Conversa, conversa_id)
