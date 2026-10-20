@@ -9,7 +9,7 @@ import logging
 import random
 import time
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from google import genai
@@ -26,6 +26,18 @@ log = logging.getLogger(__name__)
 MAX_PASSOS = 6  # tool rounds per customer message before giving up
 TRANSITORIOS = {429, 500, 503, 504}
 DESCULPA = "Desculpe, tive um problema aqui. Pode repetir, por favor?"
+
+# Models whose free daily quota is gone, and the day it ran out. The quota is
+# per project, so this is shared by every conversation in the process.
+ESGOTADOS: dict[str, date] = {}
+
+
+class SemModelo(Exception):
+    """Every model is overloaded or out of quota."""
+
+
+def cota_diaria(exc: errors.APIError) -> bool:
+    return exc.code == 429 and "PerDay" in str(exc)
 
 
 def custo_usd(entrada: int, saida: int) -> Decimal:
@@ -95,12 +107,21 @@ class AgenteTexto:
     async def _gerar(self) -> types.GenerateContentResponse:
         ultimo = None
         for rodada in range(4):
-            for modelo in self.modelos:
+            hoje = date.today()
+            disponiveis = [m for m in self.modelos if ESGOTADOS.get(m) != hoje]
+            if not disponiveis:
+                break  # sleeping won't bring a daily quota back
+            for modelo in disponiveis:
                 try:
                     r = await self.client.aio.models.generate_content(
                         model=modelo, contents=self.historico, config=self._config()
                     )
                 except errors.APIError as exc:
+                    if cota_diaria(exc):
+                        ESGOTADOS[modelo] = hoje
+                        log.warning("cota diária do %s acabou", modelo)
+                        ultimo = exc
+                        continue
                     if exc.code in TRANSITORIOS or exc.code == 404:
                         ultimo = exc
                         continue
@@ -111,7 +132,7 @@ class AgenteTexto:
                     self.tokens_saida += (u.candidates_token_count or 0) + (u.thoughts_token_count or 0)
                 return r
             await self.sleep(min(5 * 2**rodada, 40) + random.uniform(0, 2))
-        raise ultimo or RuntimeError("sem resposta")
+        raise SemModelo(str(ultimo) if ultimo else "nenhum modelo disponível")
 
     async def _chamar(self, nome: str, args: dict) -> dict:
         funcao = getattr(self.ferramentas, nome, None) if nome in {d["name"] for d in DECLARACOES} else None
@@ -146,7 +167,7 @@ class AgenteTexto:
                         types.Part(function_response=types.FunctionResponse(id=chamada.id, name=chamada.name, response=resultado))
                     )
                 self.historico.append(types.Content(role="user", parts=respostas))
-        except errors.APIError as exc:
+        except (errors.APIError, SemModelo) as exc:
             log.warning("gemini falhou: %s", exc)
         await self._registrar(Papel.agente, DESCULPA)
         return DESCULPA

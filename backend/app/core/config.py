@@ -24,7 +24,14 @@ class Settings(BaseSettings):
 
     # Gemini (free tier). Text models are tried in order when one is overloaded.
     gemini_api_key: str = ""
-    gemini_modelos_texto: list[str] = ["gemini-3.7-flash", "gemini-flash-latest"]
+    # The free tier allows ~20 requests a day per model, so the list is long.
+    gemini_modelos_texto: list[str] = [
+        "gemini-3.8-flash",
+        "gemini-3.7-flash",
+        "gemini-3.6-flash",
+        "gemini-3.5-flash",
+        "gemini-3-flash-preview",
+    ]
     # Reference paid-tier prices (USD per million tokens) used only to show what a
     # conversation would cost; the demo itself runs on the free tier.
     preco_entrada_usd_mtok: float = 0.30

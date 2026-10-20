@@ -4,6 +4,9 @@ from types import SimpleNamespace
 from google.genai import errors, types
 from sqlalchemy import select
 
+import pytest
+
+from app.agente import texto
 from app.agente.ferramentas import Ferramentas
 from app.agente.texto import DESCULPA, AgenteTexto
 from app.core.config import settings
@@ -12,6 +15,13 @@ from app.models import Agendamento, Conversa, Mensagem, Papel
 
 TZ = settings.tz
 AGORA = datetime(2026, 10, 19, 18, 0, tzinfo=TZ)  # Monday evening
+
+
+@pytest.fixture(autouse=True)
+def cotas_zeradas():
+    texto.ESGOTADOS.clear()
+    yield
+    texto.ESGOTADOS.clear()
 
 
 def ferramentas(conversa_id=None):
@@ -160,6 +170,20 @@ async def test_overloaded_model_falls_back_and_a_dead_api_gets_an_apology():
 
     morto = FakeGenai(*[sobrecarga] * 8)
     assert await agente(morto).responder("oi") == DESCULPA
+
+
+async def test_model_out_of_daily_quota_is_skipped_for_the_rest_of_the_day():
+    diario = errors.APIError(429, {"error": {"code": 429, "message": "Quota exceeded: GenerateRequestsPerDayPerProjectPerModel-FreeTier", "status": "RESOURCE_EXHAUSTED"}})
+    fake = FakeGenai(diario, fala("Oi!"), fala("De novo!"))
+    a = agente(fake)
+    assert await a.responder("oi") == "Oi!"
+    assert await a.responder("oi de novo") == "De novo!"
+    assert fake.modelos == ["novo", "estavel", "estavel"]  # "novo" not tried again today
+
+    texto.ESGOTADOS["estavel"] = texto.date.today()
+    sem_cota = FakeGenai()
+    assert await agente(sem_cota).responder("oi") == DESCULPA
+    assert sem_cota.modelos == []  # gave up at once instead of sleeping
 
 
 async def test_tool_loop_is_bounded():
