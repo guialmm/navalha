@@ -29,6 +29,7 @@ _ligacoes: dict[str, deque[float]] = defaultdict(deque)
 # LiveKit's free plan has 1,000 agent minutes a month: ~30 short calls a day.
 _hoje: dict[date, int] = {}
 
+INTERROMPIDA = " [interrompida]"  # suffix the voice recorder adds when the customer cut in
 TELEFONE = re.compile(r"(?<!\d)\(?(\d{2})\)?[\s.-]{0,2}(\d{4,5})[\s.-]?(\d{4})(?!\d)")
 
 
@@ -118,8 +119,12 @@ async def agenda(dia: date | None = None, dias: int = 7, session: AsyncSession =
 
 @app.get("/api/conversas")
 async def conversas(limite: int = 20, session: AsyncSession = Depends(get_session)) -> list[dict]:
-    mensagens = (
-        select(Mensagem.conversa_id, func.count().label("n"))
+    falas = (
+        select(
+            Mensagem.conversa_id,
+            func.count().label("n"),
+            func.count().filter(Mensagem.papel == Papel.cliente).label("cliente"),
+        )
         .where(Mensagem.papel != Papel.ferramenta)
         .group_by(Mensagem.conversa_id)
         .subquery()
@@ -127,10 +132,11 @@ async def conversas(limite: int = 20, session: AsyncSession = Depends(get_sessio
     agendou = select(Agendamento.conversa_id).where(Agendamento.conversa_id.is_not(None))
     rows = (
         await session.execute(
-            select(Conversa, func.coalesce(mensagens.c.n, 0), Conversa.id.in_(agendou))
-            .outerjoin(mensagens, mensagens.c.conversa_id == Conversa.id)
-            # Calls where nobody spoke (mic denied, closed tab) are noise on the dashboard.
-            .where(Conversa.canal != Canal.eval, mensagens.c.n > 0)
+            select(Conversa, falas.c.n, Conversa.id.in_(agendou))
+            .join(falas, falas.c.conversa_id == Conversa.id)
+            # Calls where the customer never spoke (mic denied, tab closed after the
+            # greeting) are noise on the dashboard.
+            .where(Conversa.canal != Canal.eval, falas.c.cliente > 0)
             .order_by(Conversa.iniciada_em.desc())
             .limit(min(limite, 100))
         )
@@ -166,7 +172,8 @@ async def conversa(conversa_id: uuid.UUID, session: AsyncSession = Depends(get_s
         "mensagens": [
             {
                 "papel": m.papel.value,
-                "texto": mascarar(m.conteudo),
+                "texto": mascarar(m.conteudo.removesuffix(INTERROMPIDA)),
+                "interrompida": m.conteudo.endswith(INTERROMPIDA),
                 "ferramenta": m.ferramenta,
                 "latencia_ms": m.latencia_ms,
                 "em": m.created_at.astimezone(settings.tz).isoformat(),

@@ -23,7 +23,13 @@ type ResumoConversa = {
   agendou: boolean;
 };
 
-type Mensagem = { papel: "cliente" | "agente" | "ferramenta"; texto: string; ferramenta: string | null; latencia_ms: number | null };
+type Mensagem = {
+  papel: "cliente" | "agente" | "ferramenta";
+  texto: string;
+  ferramenta: string | null;
+  latencia_ms: number | null;
+  interrompida: boolean;
+};
 type Conversa = ResumoConversa & { tokens: number; mensagens: Mensagem[] };
 
 const dia = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" });
@@ -45,7 +51,7 @@ export default function Painel() {
 
   useEffect(() => {
     fetch("/api/agenda?dias=7").then((r) => r.json()).then(setAgenda).catch(() => setAgenda([]));
-    fetch("/api/conversas").then((r) => r.json()).then(setConversas).catch(() => setConversas([]));
+    fetch("/api/conversas?limite=10").then((r) => r.json()).then(setConversas).catch(() => setConversas([]));
   }, []);
 
   async function abrir(id: string) {
@@ -144,6 +150,7 @@ export default function Painel() {
                         }`}
                       >
                         {m.texto}
+                        {m.interrompida && <span className="ml-1 text-[10px] text-text-muted">· cortada pelo cliente</span>}
                         {m.latencia_ms != null && (
                           <span className="ml-2 text-[10px] text-text-muted">{segundos(m.latencia_ms)}</span>
                         )}

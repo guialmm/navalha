@@ -69,16 +69,19 @@ async def test_dashboard_hides_eval_conversations_and_masks_transcripts(http):
     async with SessionLocal() as s:
         voz = Conversa(canal=Canal.voz, iniciada_em=agora, duracao_s=60)
         teste = Conversa(canal=Canal.eval, iniciada_em=agora)
-        muda = Conversa(canal=Canal.voz, iniciada_em=agora)  # mic denied: nobody spoke
+        muda = Conversa(canal=Canal.voz, iniciada_em=agora)  # mic denied: only the greeting
         s.add_all([voz, teste, muda])
         await s.flush()
+        s.add(Mensagem(conversa_id=muda.id, papel=Papel.agente, conteudo="Barbearia Navalha, tudo bem?"))
         s.add(Mensagem(conversa_id=voz.id, papel=Papel.cliente, conteudo="é 11 98765-4321"))
+        s.add(Mensagem(conversa_id=voz.id, papel=Papel.agente, conteudo="Certo, vou anotar [interrompida]"))
         await s.commit()
 
     lista = (await http.get("/api/conversas")).json()
-    assert [c["id"] for c in lista] == [str(voz.id)] and lista[0]["falas"] == 1
+    assert [c["id"] for c in lista] == [str(voz.id)] and lista[0]["falas"] == 2
     detalhe = (await http.get(f"/api/conversas/{voz.id}")).json()
     assert detalhe["mensagens"][0]["texto"] == "é (11) 9••••-4321"
+    assert (detalhe["mensagens"][1]["texto"], detalhe["mensagens"][1]["interrompida"]) == ("Certo, vou anotar", True)
     assert (await http.get(f"/api/conversas/{teste.id}")).status_code == 404
 
 

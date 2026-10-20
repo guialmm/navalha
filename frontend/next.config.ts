@@ -5,6 +5,7 @@ const API_URL = process.env.API_URL ?? "http://localhost:8002";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  devIndicators: false,
   partialPrefetching: true,
   turbopack: {
     rules: {
