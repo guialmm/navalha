@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 @theme {
-  /* Barbershop at night: graphite, ivory type, brass details. */
+  /* Barbershop at night: graphite, ivory type, chrome details (the razor). */
   --color-bg: #0e0e0f;
   --color-bg-elev: #17171a;
   --color-ink: #f2ede4; /* primary surfaces on dark: ivory buttons and bubbles */
-  --color-accent: #c9a46a; /* brass */
-  --color-accent-soft: rgba(201, 164, 106, 0.12);
+  --color-accent: #c9ced8; /* chrome */
+  --color-accent-soft: rgba(201, 206, 216, 0.1);
   --color-border: rgba(242, 237, 228, 0.08);
   --color-border-strong: rgba(242, 237, 228, 0.18);
   --color-surface: rgba(242, 237, 228, 0.05);
@@ -37,6 +37,17 @@ body {
   from { transform: translateX(24px); opacity: 0; }
   to { transform: none; opacity: 1; }
 }
+/* Polished chrome: a bright band across the middle, like light on a blade. */
+.cromo {
+  background: linear-gradient(180deg, #f7f8fa 0%, #c9ced8 42%, #7f8590 52%, #d8dce3 78%, #a9afba 100%);
+}
+.texto-cromo {
+  background: linear-gradient(180deg, #ffffff 0%, #d4d8df 40%, #8a909b 58%, #dfe2e8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .animate-surgir { animation: surgir 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .animate-gaveta { animation: gaveta 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
 
@@ -47,8 +58,8 @@ body {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(50rem 28rem at 50% 36%, rgba(201, 164, 106, 0.1), transparent 70%),
-    radial-gradient(60rem 24rem at 50% 110%, rgba(201, 164, 106, 0.05), transparent 70%);
+    radial-gradient(50rem 28rem at 50% 36%, rgba(201, 206, 216, 0.07), transparent 70%),
+    radial-gradient(60rem 24rem at 50% 110%, rgba(201, 206, 216, 0.04), transparent 70%);
 }
 
 body::after {

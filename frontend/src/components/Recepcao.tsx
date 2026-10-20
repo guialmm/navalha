@@ -72,7 +72,7 @@ export function Recepcao() {
       {!ligacao && (
         <>
           <h1 className="mt-3 max-w-3xl text-balance text-center text-4xl font-semibold tracking-[-0.035em] sm:text-[3.25rem] sm:leading-[1.05]">
-            Marque seu horário <span className="text-accent">conversando</span>.
+            Marque seu horário <span className="texto-cromo">conversando</span>.
           </h1>
           <p className="mt-4 max-w-md text-balance text-center text-text-dim">
             A recepcionista é uma IA. Ela consulta a agenda, oferece horários e confirma tudo com você, por voz.
@@ -129,9 +129,9 @@ function Espera({ chamando, ligar }: { chamando: boolean; ligar: () => void }) {
       <button
         onClick={ligar}
         disabled={chamando}
-        className="group mt-8 inline-flex items-center gap-3 rounded-full bg-ink py-3 pl-3 pr-6 font-medium text-bg shadow-[0_10px_40px_-12px_rgba(201,164,106,0.45)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_48px_-14px_rgba(201,164,106,0.6)] active:translate-y-0 disabled:opacity-70"
+        className="group mt-8 inline-flex items-center gap-3 rounded-full bg-ink py-3 pl-3 pr-6 font-medium text-bg shadow-[0_10px_40px_-12px_rgba(201,206,216,0.25)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_48px_-14px_rgba(201,206,216,0.35)] active:translate-y-0 disabled:opacity-70"
       >
-        <span className="grid size-9 place-items-center rounded-full bg-accent transition group-hover:scale-105">
+        <span className="cromo grid size-9 place-items-center rounded-full text-bg shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] transition group-hover:scale-105">
           <IconeTelefone />
         </span>
         {chamando ? "Chamando…" : "Ligar para a recepção"}
