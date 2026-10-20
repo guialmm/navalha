@@ -14,17 +14,29 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className={`${interTight.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
-        <header className="border-b border-border">
-          <nav className="mx-auto flex max-w-5xl items-center gap-6 px-4 py-4 sm:px-6">
+        <header className="sticky top-0 z-20 border-b border-border/60 bg-bg/70 backdrop-blur-md">
+          <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
             <Link href="/" className="text-lg font-extrabold tracking-tight">
               navalha<span className="text-accent">.</span>
             </Link>
-            <Link href="/" className="text-sm text-text-dim hover:text-text">Recepção</Link>
-            <Link href="/painel" className="text-sm text-text-dim hover:text-text">Painel</Link>
+            <div className="flex items-center gap-1 text-sm">
+              <Link href="/" className="rounded-full px-3 py-1.5 text-text-dim transition hover:bg-surface hover:text-text">
+                Recepção
+              </Link>
+              <Link href="/painel" className="rounded-full px-3 py-1.5 text-text-dim transition hover:bg-surface hover:text-text">
+                Painel
+              </Link>
+              <a
+                href="https://github.com/guialmm/navalha"
+                className="ml-2 rounded-full border border-border-strong px-3 py-1.5 text-text-dim transition hover:border-ink hover:text-text"
+              >
+                Código
+              </a>
+            </div>
           </nav>
         </header>
         <main className="flex-1">{children}</main>
-        <footer className="border-t border-border py-6 text-center text-xs text-text-muted">
+        <footer className="py-6 text-center text-xs text-text-muted">
           Projeto de portfólio · barbearia fictícia · LiveKit + Gemini Live
         </footer>
       </body>

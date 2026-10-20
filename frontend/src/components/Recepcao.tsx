@@ -23,6 +23,14 @@ const SUGESTOES = [
   "Quanto custa corte e barba?",
 ];
 
+const STATUS: Record<EstadoOrbe, string> = {
+  parado: "Recepção disponível",
+  conectando: "Chamando a recepção",
+  ouvindo: "Ouvindo",
+  pensando: "Consultando a agenda",
+  falando: "Falando",
+};
+
 export function Recepcao() {
   const [ligacao, setLigacao] = useState<Ligacao | null>(null);
   const [chamando, setChamando] = useState(false);
@@ -57,126 +65,235 @@ export function Recepcao() {
     setChamando(false);
   }
 
-  if (!ligacao) {
-    return (
-      <Layout
-        erro={erro}
-        palco={
-          <>
-            <Orbe estado={chamando ? "conectando" : "parado"} nivel={0} nivelCliente={0} />
-            <button
-              onClick={ligar}
-              disabled={chamando}
-              className="mt-6 rounded-full bg-ink px-7 py-3 font-semibold text-bg transition hover:bg-accent disabled:opacity-60"
-            >
-              {chamando ? "Chamando…" : "Ligar para a recepção"}
-            </button>
-          </>
-        }
-        lateral={<Sugestoes />}
-      />
-    );
-  }
-
   return (
-    <LiveKitRoom
-      serverUrl={ligacao.url}
-      token={ligacao.token}
-      connect
-      audio
-      video={false}
-      onDisconnected={encerrar}
-      // The first error explains what happened; the disconnect that follows it doesn't.
-      onError={() => setErro((atual) => atual ?? "A ligação caiu. Tente de novo.")}
-      onMediaDeviceFailure={() => {
-        setErro("Precisamos do microfone para a ligação. Libere o acesso no navegador.");
-        encerrar();
-      }}
-    >
-      <Layout erro={erro} palco={<Chamada />} lateral={<Transcricao />} />
-      <RoomAudioRenderer />
-    </LiveKitRoom>
-  );
-}
+    <div className="palco relative flex min-h-[calc(100svh-4rem)] flex-col items-center px-4 pb-10 pt-10 sm:pt-14">
+      <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">Barbearia Navalha · Recepção</p>
+      {/* During a call the stage belongs to the orb, the captions and the controls. */}
+      {!ligacao && (
+        <>
+          <h1 className="mt-3 max-w-3xl text-balance text-center text-4xl font-semibold tracking-[-0.035em] sm:text-[3.25rem] sm:leading-[1.05]">
+            Marque seu horário <span className="text-accent">conversando</span>.
+          </h1>
+          <p className="mt-4 max-w-md text-balance text-center text-text-dim">
+            A recepcionista é uma IA. Ela consulta a agenda, oferece horários e confirma tudo com você, por voz.
+          </p>
+        </>
+      )}
 
-function Layout({ palco, lateral, erro }: { palco: ReactNode; lateral: ReactNode; erro: string | null }) {
-  return (
-    <div className="mx-auto grid max-w-5xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:items-start">
-      <section className="flex flex-col items-center text-center lg:sticky lg:top-12">
-        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Barbearia Navalha</h1>
-        <p className="mt-2 max-w-sm text-text-dim">
-          Fale com a recepção para marcar, remarcar ou cancelar um horário. Ela é uma IA e atende por voz.
+      {ligacao ? (
+        <LiveKitRoom
+          serverUrl={ligacao.url}
+          token={ligacao.token}
+          connect
+          audio
+          video={false}
+          onDisconnected={encerrar}
+          // The first error explains what happened; the disconnect that follows it doesn't.
+          onError={() => setErro((atual) => atual ?? "A ligação caiu. Tente de novo.")}
+          onMediaDeviceFailure={() => {
+            setErro("Precisamos do microfone para a ligação. Libere o acesso no navegador.");
+            encerrar();
+          }}
+          className="flex w-full flex-col items-center"
+        >
+          <Chamada />
+          <RoomAudioRenderer />
+        </LiveKitRoom>
+      ) : (
+        <Espera chamando={chamando} ligar={ligar} />
+      )}
+
+      {erro && (
+        <p role="alert" className="mt-4 rounded-full bg-danger/10 px-4 py-1.5 text-sm text-danger">
+          {erro}
         </p>
-        <div className="mt-10 flex flex-col items-center">{palco}</div>
-        {erro && <p className="mt-4 text-sm text-danger">{erro}</p>}
-      </section>
-      <section>{lateral}</section>
+      )}
     </div>
   );
 }
 
-function Sugestoes() {
+function Espera({ chamando, ligar }: { chamando: boolean; ligar: () => void }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setI((n) => (n + 1) % SUGESTOES.length), 3600);
+    return () => clearInterval(id);
+  }, []);
+
   return (
-    <div className="rounded-2xl border border-border bg-bg-elev p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Experimente dizer</h2>
-      <ul className="mt-4 space-y-3">
-        {SUGESTOES.map((s) => (
-          <li key={s} className="rounded-xl bg-surface px-4 py-3 text-text-dim">“{s}”</li>
-        ))}
-      </ul>
-      <p className="mt-6 text-xs leading-relaxed text-text-muted">
-        A agenda é de demonstração e os horários são fictícios. Se você disser um telefone, ele aparece
-        mascarado no painel. Cada ligação usa a cota gratuita do Gemini, por isso há um limite de
-        ligações seguidas.
+    <>
+      <div className="mt-8">
+        <Orbe estado={chamando ? "conectando" : "parado"} nivel={0} nivelCliente={0} />
+      </div>
+      <Status estado={chamando ? "conectando" : "parado"} />
+
+      <button
+        onClick={ligar}
+        disabled={chamando}
+        className="group mt-8 inline-flex items-center gap-3 rounded-full bg-ink py-3 pl-3 pr-6 font-medium text-bg shadow-[0_10px_30px_-12px_rgba(29,23,18,0.6)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_-14px_rgba(29,23,18,0.7)] active:translate-y-0 disabled:opacity-70"
+      >
+        <span className="grid size-9 place-items-center rounded-full bg-accent transition group-hover:scale-105">
+          <IconeTelefone />
+        </span>
+        {chamando ? "Chamando…" : "Ligar para a recepção"}
+      </button>
+
+      <p className="mt-6 h-6 text-sm text-text-muted">
+        Experimente: <span key={i} className="animate-surgir inline-block text-text-dim">“{SUGESTOES[i]}”</span>
       </p>
-    </div>
+    </>
   );
 }
 
-/** Maps the agent's state and both voices to the orb. */
+function Status({ estado }: { estado: EstadoOrbe }) {
+  const ativo = estado !== "parado";
+  return (
+    <p className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-text-dim" role="status">
+      <span className={`size-1.5 rounded-full ${ativo ? "animate-pulse bg-accent" : "bg-ok"}`} />
+      {STATUS[estado]}
+    </p>
+  );
+}
+
+/** Everything that needs the room: orb levels, captions, call controls. */
 function Chamada() {
   const { state, audioTrack } = useVoiceAssistant();
-  const { microphoneTrack } = useLocalParticipant();
+  const { localParticipant, microphoneTrack, isMicrophoneEnabled } = useLocalParticipant();
   const room = useRoomContext();
   const nivelAgente = useTrackVolume(audioTrack);
   const nivelCliente = useTrackVolume(microphoneTrack?.track as LocalAudioTrack | undefined);
+  const [transcricaoAberta, setTranscricaoAberta] = useState(false);
+  // Subscribed once, from the first second of the call: a hook mounted later (the
+  // drawer) would only see lines spoken after it opened.
+  const transcricoes = useTranscriptions();
+  const meuId = localParticipant.identity;
 
   const estado: EstadoOrbe =
     state === "speaking" ? "falando" : state === "thinking" ? "pensando" : state === "listening" ? "ouvindo" : "conectando";
 
   return (
     <>
-      <Orbe estado={estado} nivel={nivelAgente * 3} nivelCliente={nivelCliente} />
-      <button
-        onClick={() => room.disconnect()}
-        className="mt-6 rounded-full border border-danger px-7 py-3 font-semibold text-danger transition hover:bg-danger hover:text-white"
-      >
-        Desligar
-      </button>
+      <div className="mt-4">
+        <Orbe estado={estado} nivel={nivelAgente * 3} nivelCliente={isMicrophoneEnabled ? nivelCliente : 0} />
+      </div>
+      <Status estado={estado} />
+      <Legendas transcricoes={transcricoes} meuId={meuId} />
+
+      <div className="mt-6 flex items-center gap-2 rounded-full border border-border bg-bg-elev/80 p-2 shadow-[0_10px_30px_-18px_rgba(29,23,18,0.5)] backdrop-blur">
+        <BotaoRedondo
+          rotulo={isMicrophoneEnabled ? "Silenciar microfone" : "Ativar microfone"}
+          ativo={!isMicrophoneEnabled}
+          onClick={() => localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled)}
+        >
+          {isMicrophoneEnabled ? <IconeMicrofone /> : <IconeMicrofoneMudo />}
+        </BotaoRedondo>
+        <Cronometro />
+        <BotaoRedondo rotulo="Ver transcrição" ativo={transcricaoAberta} onClick={() => setTranscricaoAberta((v) => !v)}>
+          <IconeTexto />
+        </BotaoRedondo>
+        <button
+          onClick={() => room.disconnect()}
+          aria-label="Desligar"
+          title="Desligar"
+          className="grid size-11 place-items-center rounded-full bg-danger text-white transition hover:brightness-110 active:scale-95"
+        >
+          <IconeTelefone desligar />
+        </button>
+      </div>
+
+      {transcricaoAberta && (
+        <Transcricao transcricoes={transcricoes} meuId={meuId} fechar={() => setTranscricaoAberta(false)} />
+      )}
     </>
   );
 }
 
-function Transcricao() {
-  const transcricoes = useTranscriptions();
-  const { localParticipant } = useLocalParticipant();
+function BotaoRedondo(props: { rotulo: string; ativo: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      onClick={props.onClick}
+      aria-label={props.rotulo}
+      aria-pressed={props.ativo}
+      title={props.rotulo}
+      className={`grid size-11 place-items-center rounded-full transition active:scale-95 ${
+        props.ativo ? "bg-ink text-bg" : "text-text-dim hover:bg-surface hover:text-text"
+      }`}
+    >
+      {props.children}
+    </button>
+  );
+}
+
+function Cronometro() {
+  const [segundos, setSegundos] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setSegundos((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const mm = String(Math.floor(segundos / 60)).padStart(2, "0");
+  const ss = String(segundos % 60).padStart(2, "0");
+  return (
+    <span className="min-w-14 text-center font-mono text-sm tabular-nums text-text-dim">
+      {mm}:{ss}
+    </span>
+  );
+}
+
+/** Live captions: the line being spoken now, the previous one fading above it. */
+type Falas = { transcricoes: ReturnType<typeof useTranscriptions>; meuId: string };
+
+function Legendas({ transcricoes, meuId }: Falas) {
+  const ultimas = transcricoes.slice(-2);
+
+  return (
+    <div className="mt-5 flex h-40 w-full max-w-2xl flex-col justify-end gap-2 text-center" aria-live="polite">
+      {ultimas.length === 0 && <p className="text-text-muted">Pode falar quando ela atender.</p>}
+      {ultimas.map((t, i) => {
+        const cliente = t.participantInfo.identity === meuId;
+        const atual = i === ultimas.length - 1;
+        return (
+          <p
+            key={t.streamInfo.id}
+            className={`animate-surgir text-balance transition-all duration-300 ${
+              atual ? "line-clamp-4 text-lg leading-snug text-text sm:text-[1.35rem]" : "line-clamp-1 text-sm text-text-muted"
+            }`}
+          >
+            <span
+              className={`mr-2 align-middle text-[11px] font-semibold uppercase tracking-[0.14em] ${
+                cliente ? "text-text-muted" : "text-accent"
+              }`}
+            >
+              {cliente ? "Você" : "Recepção"}
+            </span>
+            {t.text}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+function Transcricao({ transcricoes, meuId, fechar }: Falas & { fechar: () => void }) {
   const fim = useRef<HTMLDivElement>(null);
   useEffect(() => {
     fim.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [transcricoes.length]);
 
   return (
-    <div className="rounded-2xl border border-border bg-bg-elev p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">Transcrição ao vivo</h2>
-      <div className="mt-4 max-h-[60vh] space-y-3 overflow-y-auto pr-1">
-        {transcricoes.length === 0 && <p className="text-text-muted">A conversa aparece aqui.</p>}
+    <aside className="animate-gaveta fixed inset-y-0 right-0 z-30 flex w-full max-w-md flex-col border-l border-border bg-bg-elev shadow-2xl">
+      <div className="flex items-center justify-between border-b border-border px-5 py-4">
+        <h2 className="font-semibold">Transcrição</h2>
+        <button onClick={fechar} aria-label="Fechar transcrição" className="rounded-full p-2 text-text-dim hover:bg-surface">
+          <IconeFechar />
+        </button>
+      </div>
+      <div className="flex-1 space-y-3 overflow-y-auto px-5 py-5">
         {transcricoes.map((t) => {
-          const cliente = t.participantInfo.identity === localParticipant.identity;
+          const cliente = t.participantInfo.identity === meuId;
           return (
-            <div key={t.streamInfo.id} className={`animate-surgir flex ${cliente ? "justify-end" : ""}`}>
+            <div key={t.streamInfo.id} className={`flex ${cliente ? "justify-end" : ""}`}>
               <p
                 className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-[15px] leading-snug ${
-                  cliente ? "bg-ink text-bg" : "bg-surface text-text"
+                  cliente ? "rounded-br-md bg-ink text-bg" : "rounded-bl-md bg-surface"
                 }`}
               >
                 {t.text}
@@ -186,6 +303,56 @@ function Transcricao() {
         })}
         <div ref={fim} />
       </div>
-    </div>
+    </aside>
+  );
+}
+
+// Icons: 1.75px strokes, drawn to sit with Inter Tight's weight.
+const tracos = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.75,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+} as const;
+
+function IconeTelefone({ desligar = false }: { desligar?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className={`size-[18px] ${desligar ? "rotate-[135deg]" : ""}`} {...tracos}>
+      <path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />
+    </svg>
+  );
+}
+
+function IconeMicrofone() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" {...tracos}>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+    </svg>
+  );
+}
+
+function IconeMicrofoneMudo() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" {...tracos}>
+      <path d="M15 9.5V6a3 3 0 0 0-5.7-1.3M9 9v2a3 3 0 0 0 4.6 2.5M5 11a7 7 0 0 0 11.5 5.4M19 11a7 7 0 0 1-.7 3M12 18v3M3 3l18 18" />
+    </svg>
+  );
+}
+
+function IconeTexto() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" {...tracos}>
+      <path d="M4 6h16M4 12h10M4 18h13" />
+    </svg>
+  );
+}
+
+function IconeFechar() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" {...tracos}>
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
   );
 }

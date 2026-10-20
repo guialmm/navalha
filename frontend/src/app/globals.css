@@ -25,23 +25,37 @@ body {
   font-family: var(--font-sans);
 }
 
-/* The receptionist's orb. Volume drives --nivel (0..1) from JavaScript. */
-@keyframes respirar {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.04); }
-}
-@keyframes girar {
-  to { transform: rotate(360deg); }
-}
-@keyframes onda {
-  from { transform: scale(1); opacity: 0.35; }
-  to { transform: scale(1.6); opacity: 0; }
-}
 @keyframes surgir {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; transform: translateY(6px); filter: blur(2px); }
+  to { opacity: 1; transform: none; filter: none; }
 }
-.animate-surgir { animation: surgir 0.25s ease-out; }
+@keyframes gaveta {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.animate-surgir { animation: surgir 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.animate-gaveta { animation: gaveta 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+/* A warm light behind the orb, and paper grain so the page isn't flat digital beige. */
+.palco::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60rem 30rem at 50% 38%, rgba(233, 138, 91, 0.16), transparent 70%),
+    radial-gradient(40rem 20rem at 50% 100%, rgba(29, 23, 18, 0.05), transparent 70%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
