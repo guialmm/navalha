@@ -10,4 +10,4 @@ coverage/
 .claude/
 .env.local
 .env.render
-scripts/.cache_tts/
+.cache_tts/
