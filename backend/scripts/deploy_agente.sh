@@ -21,7 +21,7 @@ chmod 600 "$segredos"
 printf 'GEMINI_API_KEY=%s\nDATABASE_URL=%s\nENV=prod\n' "$GEMINI_API_KEY" "$DATABASE_URL" > "$segredos"
 
 if [ -f livekit.toml ]; then
-  lk agent update-secrets --secrets-file "$segredos" . && lk agent deploy .
+  lk agent update-secrets --secrets-file "$segredos" --overwrite . && lk agent deploy .
 else
   lk agent create --secrets-file "$segredos" --yes .
 fi
