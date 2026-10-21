@@ -181,6 +181,11 @@ python -m app.agente.chat                 # por texto
 python -m scripts.ligacao_simulada "Oi, quero cortar o cabelo sábado" "Pode ser o primeiro"
 ```
 
+## Deploy
+
+Neon (banco), LiveKit Cloud (agente de voz), Render (API) e Vercel (site), tudo no plano
+gratuito. Passo a passo e script de publicação do agente em [DEPLOY.md](DEPLOY.md).
+
 ## Testes
 
 ```bash
