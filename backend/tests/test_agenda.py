@@ -215,3 +215,10 @@ def test_mobile_missing_a_digit_is_refused():
     with pytest.raises(ErroAgenda, match="faltou um número"):
         normalizar_telefone("11 9987-5432")
     assert normalizar_telefone("11 3333-4444") == "1133334444"  # landlines still have 10
+
+
+async def test_service_names_customers_actually_say(session):
+    # A real call: "quero cortar o cabelo" reached the tool as "Cabelo" and was refused.
+    for dito, nome in [("Cabelo", "Corte"), ("cortar o cabelo", "Corte"), ("fazer a barba", "Barba"),
+                       ("cabelo e barba", "Corte e barba")]:
+        assert (await buscar_servico(session, dito)).nome == nome

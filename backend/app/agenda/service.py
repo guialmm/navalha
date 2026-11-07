@@ -58,9 +58,22 @@ def normalizar_telefone(telefone: str) -> str:
     return digitos
 
 
+# How customers actually ask, mapped to the service names in the database.
+APELIDOS = {
+    "cabelo": "corte",
+    "cortar cabelo": "corte",
+    "cortar o cabelo": "corte",
+    "corte de cabelo": "corte",
+    "fazer a barba": "barba",
+    "cabelo e barba": "corte e barba",
+    "corte de cabelo e barba": "corte e barba",
+}
+
+
 async def buscar_servico(session: AsyncSession, nome: str) -> Servico:
     servicos = (await session.scalars(select(Servico).where(Servico.ativo))).all()
     alvo = _sem_acento(nome)
+    alvo = APELIDOS.get(alvo, alvo)
     exatos = [s for s in servicos if _sem_acento(s.nome) == alvo]
     parciais = [s for s in servicos if alvo and (alvo in _sem_acento(s.nome) or _sem_acento(s.nome) in alvo)]
     if exatos or len(parciais) == 1:
