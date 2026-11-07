@@ -1,4 +1,4 @@
--r requirements-voz.txt
+-r requirements.txt
 numpy==2.5.4
 pyjwt==2.15.1
 pytest==9.1.1
