@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/guialmm/navalha/actions/workflows/ci.yml/badge.svg)](https://github.com/guialmm/navalha/actions/workflows/ci.yml)
 
+**[Ligue para a recepção → navalha1.vercel.app](https://navalha1.vercel.app)** (navegador com microfone; a primeira ligação pode levar ~30 s para a API acordar)
+
 Recepcionista virtual **por voz** de uma barbearia fictícia: o cliente liga pelo
 navegador, fala o que quer e ela consulta a agenda, oferece horários, **marca,
 remarca e cancela** — e confirma tudo falando. Cada ligação fica registrada com
