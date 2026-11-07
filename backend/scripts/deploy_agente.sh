@@ -23,6 +23,7 @@ printf 'GEMINI_API_KEY=%s\nDATABASE_URL=%s\nENV=prod\n' "$GEMINI_API_KEY" "$DATA
 if [ -f livekit.toml ]; then
   lk agent update-secrets --secrets-file "$segredos" --overwrite . && lk agent deploy .
 else
-  lk agent create --secrets-file "$segredos" --yes .
+  # No South American region; us-east is the closest to callers in Brazil.
+  lk agent create --secrets-file "$segredos" --region us-east --yes .
 fi
 echo "✓ agente publicado; acompanhe em https://cloud.livekit.io → Agents"
