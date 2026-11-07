@@ -185,8 +185,10 @@ python -m scripts.ligacao_simulada "Oi, quero cortar o cabelo sábado" "Pode ser
 
 ## Deploy
 
-Neon (banco), LiveKit Cloud (agente de voz), Render (API) e Vercel (site), tudo no plano
-gratuito. Passo a passo e script de publicação do agente em [DEPLOY.md](DEPLOY.md).
+No ar em **[navalha1.vercel.app](https://navalha1.vercel.app)**: Neon em São Paulo
+(banco), LiveKit Cloud (agente de voz, em us-east — o LiveKit não tem região na
+América do Sul), Render (API) e Vercel (site), tudo no plano gratuito. Passo a passo
+e script de publicação do agente em [DEPLOY.md](DEPLOY.md).
 
 ## Testes
 
